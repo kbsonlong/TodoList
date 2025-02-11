@@ -27,6 +27,14 @@ class TodoAPI {
     return response.json();
   }
 
+  async getTodoById(id: number): Promise<Todo> {
+    const response = await fetch(`${this.baseURL}/todos/${id}`);
+    if (!response.ok) {
+      throw new Error('获取待办事项失败');
+    }
+    return response.json();
+  }
+
   async addTodo(text: string): Promise<Todo> {
     const response = await fetch(`${this.baseURL}/todos`, {
       method: 'POST',

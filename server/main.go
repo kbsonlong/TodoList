@@ -2,18 +2,19 @@ package main
 
 import (
 	"log"
-	"github.com/gin-gonic/gin"
+
 	"github.com/gin-contrib/cors"
-	"gorm.io/gorm"
+	"github.com/gin-gonic/gin"
 	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 // Todo 模型定义
 type Todo struct {
-	ID           uint   `json:"id" gorm:"primaryKey"`
-	Text         string `json:"text"`
-	Status       string `json:"status" gorm:"default:'todo'"`
-	CreateTime   string `json:"createTime"`
+	ID            uint    `json:"id" gorm:"primaryKey"`
+	Text          string  `json:"text"`
+	Status        string  `json:"status" gorm:"default:'todo'"`
+	CreateTime    string  `json:"createTime"`
 	CompletedTime *string `json:"completedTime,omitempty"`
 }
 
@@ -40,6 +41,7 @@ func main() {
 	v1 := r.Group("/api/v1")
 	{
 		v1.GET("/todos", getTodos)
+		v1.GET("/todos/:id", getTodoById)
 		v1.POST("/todos", createTodo)
 		v1.PUT("/todos/:id", updateTodo)
 		v1.DELETE("/todos/:id", deleteTodo)

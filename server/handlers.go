@@ -92,3 +92,16 @@ func deleteTodo(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "删除成功"})
 }
+
+// getTodoById 获取单个待办事项
+func getTodoById(c *gin.Context) {
+	id := c.Param("id")
+	var todo Todo
+
+	if err := db.First(&todo, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "待办事项不存在"})
+		return
+	}
+
+	c.JSON(http.StatusOK, todo)
+}

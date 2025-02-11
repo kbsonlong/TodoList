@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import './App.css'
-import TodoAPI, { Todo } from './api'
+import { Todo } from './api'
+import { TodoStorageFactory, TodoStorage } from './storage'
 
 function App() {
   const [todos, setTodos] = useState<Todo[]>([])
@@ -10,18 +11,33 @@ function App() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [statusFilter, setStatusFilter] = useState<Todo['status'] | 'all'>('all')
+  const [storage, setStorage] = useState<TodoStorage | null>(null)
 
   useEffect(() => {
     const initDB = async () => {
       try {
         setLoading(true)
-        const api = await TodoAPI.getInstance()
-        const todos = await api.getAllTodos()
+        const factory = TodoStorageFactory.getInstance()
+        const storageInstance = await factory.initialize('indexedDB')
+        setStorage(storageInstance)
+        const todos = await storageInstance.getAllTodos()
         setTodos(todos)
         setError(null)
       } catch (err) {
         console.error('初始化失败:', err)
         setError('数据库初始化失败，请检查控制台以获取详细信息')
+        // 如果初始化失败，尝试使用API作为备选存储方式
+        try {
+          const factory = TodoStorageFactory.getInstance()
+          const storageInstance = await factory.initialize('api')
+          setStorage(storageInstance)
+          const todos = await storageInstance.getAllTodos()
+          setTodos(todos)
+          setError(null)
+        } catch (fallbackErr) {
+          console.error('备选存储初始化失败:', fallbackErr)
+          setError('所有存储方式初始化失败，请检查网络连接或刷新页面重试')
+        }
       } finally {
         setLoading(false)
       }
@@ -31,30 +47,39 @@ function App() {
 
   const addTodo = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (input.trim()) {
-      const api = await TodoAPI.getInstance()
-      const newTodo = await api.addTodo(input.trim())
+    if (!storage || !input.trim()) return
+    try {
+      const newTodo = await storage.addTodo(input.trim())
       setTodos([...todos, newTodo])
       setInput('')
+      setError(null)
+    } catch (err) {
+      console.error('添加待办事项失败:', err)
+      setError('添加待办事项失败，请稍后重试')
     }
   }
 
   const toggleTodo = async (id: number) => {
+    if (!storage) return
     const todo = todos.find(t => t.id === id)
     if (!todo) return
 
     const newStatus = todo.status === 'todo' ? 'inProgress' : todo.status === 'inProgress' ? 'completed' : 'todo'
 
-    const api = await TodoAPI.getInstance()
-    await api.updateTodoStatus(id, newStatus)
-
-    setTodos(todos.map(todo =>
-      todo.id === id ? {
-        ...todo,
-        status: newStatus,
-        completedTime: newStatus === 'completed' ? new Date().toISOString().slice(0, 16) : undefined
-      } : todo
-    ))
+    try {
+      await storage.updateTodoStatus(id, newStatus)
+      setTodos(todos.map(todo =>
+        todo.id === id ? {
+          ...todo,
+          status: newStatus,
+          completedTime: newStatus === 'completed' ? new Date().toISOString().slice(0, 16) : undefined
+        } : todo
+      ))
+      setError(null)
+    } catch (err) {
+      console.error('更新待办事项状态失败:', err)
+      setError('更新待办事项状态失败，请稍后重试')
+    }
   }
 
   const [currentPage, setCurrentPage] = useState(1)
@@ -89,9 +114,15 @@ function App() {
   const paginatedTodos = filteredTodos.slice((currentPage - 1) * pageSize, currentPage * pageSize);
   const totalPages = Math.ceil(filteredTodos.length / pageSize);
   const deleteTodo = async (id: number) => {
-    const api = await TodoAPI.getInstance()
-    await api.deleteTodo(id)
-    setTodos(todos.filter(todo => todo.id !== id))
+    if (!storage) return
+    try {
+      await storage.deleteTodo(id)
+      setTodos(todos.filter(todo => todo.id !== id))
+      setError(null)
+    } catch (err) {
+      console.error('删除待办事项失败:', err)
+      setError('删除待办事项失败，请稍后重试')
+    }
   }
 
   if (loading) {
