@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import './App.css'
-import TodoDB, { Todo } from './db'
+import TodoAPI, { Todo } from './api'
 
 function App() {
   const [todos, setTodos] = useState<Todo[]>([])
@@ -15,8 +15,8 @@ function App() {
     const initDB = async () => {
       try {
         setLoading(true)
-        const db = await TodoDB.getInstance()
-        const todos = await db.getAllTodos()
+        const api = await TodoAPI.getInstance()
+        const todos = await api.getAllTodos()
         setTodos(todos)
         setError(null)
       } catch (err) {
@@ -32,8 +32,8 @@ function App() {
   const addTodo = async (e: React.FormEvent) => {
     e.preventDefault()
     if (input.trim()) {
-      const db = await TodoDB.getInstance()
-      const newTodo = await db.addTodo(input.trim())
+      const api = await TodoAPI.getInstance()
+      const newTodo = await api.addTodo(input.trim())
       setTodos([...todos, newTodo])
       setInput('')
     }
@@ -45,8 +45,8 @@ function App() {
 
     const newStatus = todo.status === 'todo' ? 'inProgress' : todo.status === 'inProgress' ? 'completed' : 'todo'
 
-    const db = await TodoDB.getInstance()
-    await db.updateTodoStatus(id, newStatus)
+    const api = await TodoAPI.getInstance()
+    await api.updateTodoStatus(id, newStatus)
 
     setTodos(todos.map(todo =>
       todo.id === id ? {
@@ -89,8 +89,8 @@ function App() {
   const paginatedTodos = filteredTodos.slice((currentPage - 1) * pageSize, currentPage * pageSize);
   const totalPages = Math.ceil(filteredTodos.length / pageSize);
   const deleteTodo = async (id: number) => {
-    const db = await TodoDB.getInstance()
-    await db.deleteTodo(id)
+    const api = await TodoAPI.getInstance()
+    await api.deleteTodo(id)
     setTodos(todos.filter(todo => todo.id !== id))
   }
 
