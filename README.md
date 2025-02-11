@@ -185,3 +185,15 @@ server/
 5. 分页浏览
    - 使用页面底部的分页控件浏览任务列表
    - 可调整每页显示的任务数量
+
+## 功能展示
+
+![全部状态](https://raw.githubusercontent.com/kbsonlong/notes_statics/master/images/202502111523863.png)
+
+![待开始](https://raw.githubusercontent.com/kbsonlong/notes_statics/master/images/202502111523878.png)
+
+![进行中](https://raw.githubusercontent.com/kbsonlong/notes_statics/master/images/202502111524860.png)
+
+![已完成](https://raw.githubusercontent.com/kbsonlong/notes_statics/master/images/202502111524369.png)
+
+![翻页](https://raw.githubusercontent.com/kbsonlong/notes_statics/master/images/202502111525142.png)
